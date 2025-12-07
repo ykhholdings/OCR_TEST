@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>견적서 OCR 테스트</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+    h1 { font-size: 24px; margin-bottom: 16px; }
+    h2 { font-size: 18px; margin-top: 24px; }
+
+    label { display: block; margin-top: 12px; font-weight: 600; }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 16px;
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button#analyzeBtn {
+      background: #111827;
+      color: white;
+    }
+    .status {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #4b5563;
+    }
+    pre {
+      background: #f3f4f6;
+      padding: 12px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 13px;
+      max-height: 400px;
+      overflow: auto;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>견적서 이미지 → JSON 추출 (ChatGPT + Apps Script)</h1>
+
+  <p>공개 접근 가능한 견적서 이미지 URL을 입력하고 <b>분석하기</b>를 눌러봐.</p>
+
+  <label for="imageUrl">이미지 URL</label>
+  <input id="imageUrl" type="text" placeholder="https://... (공개된 견적서 이미지 URL)" />
+
+  <button id="analyzeBtn">분석하기</button>
+  <div class="status" id="status"></div>
+
+  <h2>결과(JSON)</h2>
+  <pre id="result">{}</pre>
+
+  <script>
+    // ★ 여기 Apps Script Web App URL (네가 준 것)
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHcKaZsA3M6h2XY6Ua3MHSa7FnvGSPP5z2vt97x7Dkiafcf2004qWDiL46klZAFMNLsQ/exec";
+
+    document.getElementById("analyzeBtn").addEventListener("click", async () => {
+      const imageUrl = document.getElementById("imageUrl").value.trim();
+      const statusEl = document.getElementById("status");
+      const resultEl = document.getElementById("result");
+
+      if (!imageUrl) {
+        statusEl.textContent = "이미지 URL을 입력해줘.";
+        return;
+      }
+
+      statusEl.textContent = "분석 중...";
+      resultEl.textContent = "{}";
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageUrl })
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          statusEl.textContent = "백엔드 HTTP 오류: " + res.status;
+          resultEl.textContent = text;
+          return;
+        }
+
+        const data = await res.json();
+        statusEl.textContent = "완료!";
+        resultEl.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        statusEl.textContent = "요청 중 에러 발생";
+        resultEl.textContent = String(err);
+      }
+    });
+  </script>
+</body>
+</html>

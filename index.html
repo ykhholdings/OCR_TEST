@@ -64,45 +64,45 @@
   <h2>결과(JSON)</h2>
   <pre id="result">{}</pre>
 
-  <script>
-    // ★ 여기 Apps Script Web App URL (네가 준 것)
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbySEjjUVqX9a0YJQ_iPP644SCVqmF0ZBGOxbMd2go6FG9rKNmOpKia4s48yUZXd9cJz-A/exec";
+<script>
+  // Apps Script Web App URL
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcW-bFGELXO9o0bkrRp14gmRu-33XaDFEndte-tIu7coQPAMaMDjk9ix_cfKDZxHiHyg/exec";
 
-    document.getElementById("analyzeBtn").addEventListener("click", async () => {
-      const imageUrl = document.getElementById("imageUrl").value.trim();
-      const statusEl = document.getElementById("status");
-      const resultEl = document.getElementById("result");
+  document.getElementById("analyzeBtn").addEventListener("click", async () => {
+    const imageUrl = document.getElementById("imageUrl").value.trim();
+    const statusEl = document.getElementById("status");
+    const resultEl = document.getElementById("result");
 
-      if (!imageUrl) {
-        statusEl.textContent = "이미지 URL을 입력해줘.";
+    if (!imageUrl) {
+      statusEl.textContent = "이미지 URL을 입력해줘.";
+      return;
+    }
+
+    statusEl.textContent = "분석 중...";
+    resultEl.textContent = "{}";
+
+    try {
+      // 🔹 GET + 쿼리스트링으로 요청 (POST/JSON 헤더 X)
+      const url = SCRIPT_URL + "?imageUrl=" + encodeURIComponent(imageUrl);
+
+      const res = await fetch(url); // 기본 method: GET
+
+      if (!res.ok) {
+        const text = await res.text();
+        statusEl.textContent = "백엔드 HTTP 오류: " + res.status;
+        resultEl.textContent = text;
         return;
       }
 
-      statusEl.textContent = "분석 중...";
-      resultEl.textContent = "{}";
+      const data = await res.json();
+      statusEl.textContent = "완료!";
+      resultEl.textContent = JSON.stringify(data, null, 2);
+    } catch (err) {
+      statusEl.textContent = "요청 중 에러 발생";
+      resultEl.textContent = String(err);
+    }
+  });
+</script>
 
-      try {
-        const res = await fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageUrl })
-        });
-
-        if (!res.ok) {
-          const text = await res.text();
-          statusEl.textContent = "백엔드 HTTP 오류: " + res.status;
-          resultEl.textContent = text;
-          return;
-        }
-
-        const data = await res.json();
-        statusEl.textContent = "완료!";
-        resultEl.textContent = JSON.stringify(data, null, 2);
-      } catch (err) {
-        statusEl.textContent = "요청 중 에러 발생";
-        resultEl.textContent = String(err);
-      }
-    });
-  </script>
 </body>
 </html>
